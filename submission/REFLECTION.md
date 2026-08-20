@@ -6,9 +6,9 @@
 >
 > `make verify` sẽ fail nếu còn placeholder chưa điền. Đó là cố ý.
 
-**Họ Tên:** _<Họ Tên>_
-**Cohort:** _<A20-K1 / A20-K2 / ...>_
-**Ngày submit:** _<YYYY-MM-DD>_
+**Họ Tên:** Đinh Hoài Nam
+**Cohort:** Cohort 3 - Track 2 (3A202601889) - E403
+**Ngày submit:** 20/08/2026
 
 ---
 
@@ -16,24 +16,20 @@
 
 > Từ `make probe`. Paste output hoặc điền tay.
 
-- **OS:** _<macOS 14 / Windows 11 / Ubuntu 24.04 / ...>_
-- **CPU:** _<Apple M2 / Intel i7-12700H / AMD Ryzen 7 5800H>_
-- **Cores:** _<physical / logical>_
-- **CPU extensions:** _<AVX2 / AVX-512 / NEON / —>_
-- **RAM:** _<GB>_
-- **Accelerator:** _<NVIDIA RTX 4060 / Apple Metal / Vulkan / CPU only>_
-- **llama.cpp asset đã tải:** _<vd: llama-b10488-bin-macos-arm64.tar.gz>_
-- **Model đã dùng:** _<Gemma 4 E2B / Qwen3.5 0.8B>_ (`LAB_MODEL=`_<gemma4-e2b / qwen35-0.8b>_)
-- **Quantization:** _<primary>_ + _<compare>_ (từ `models/active.json`)
+- **OS:** Windows 11
+- **CPU:** 11th Gen Intel(R) Core(TM) i5-1135G7
+- **Cores:** 4 physical / 8 logical
+- **CPU extensions:** AVX2
+- **RAM:** 16 GB
+- **Accelerator:** Vulkan
+- **llama.cpp asset đã tải:** llama-b10488-bin-win-vulkan-x64.zip
+- **Model đã dùng:** Qwen3.5 0.8B (LAB_MODEL=qwen35-0.8b)
+- **Quantization:** Q4_K_M + UD-Q2_K_XL
 
-**Chạy ở đâu:** _<laptop của tôi / Colab / Kaggle>_
-_(Nếu dùng cloud fallback: nói rõ vì sao — RAM < 8 GB, setup fail, v.v. Không mất điểm.)_
+**Chạy ở đâu:** laptop của tôi
 
-**Setup story** (≤ 80 chữ): điều gì cần thay đổi để lab chạy trên máy bạn? Có bước
-nào fail rồi phải workaround không?
-
-_Answer here._
-
+**Setup story** (≤ 80 chữ): điều gì cần thay đổi để lab chạy trên máy bạn? Có bước nào fail rồi phải workaround không?
+Tôi sử dụng model Qwen3.5 0.8B. Khi chạy `.\lab.ps1 serve` ban đầu bị lỗi "invalid argument: at" do đường dẫn thư mục chứa khoảng trắng ("Codelabs at VinUni") làm hàm `os.execv` trên Windows phân tách sai đối số. Tôi đã workaround bằng cách sửa `serve.py` để sử dụng `subprocess.run` thay thế cho `os.execv` khi chạy trên hệ điều hành Windows.
 ---
 
 ## 2. Đo lường  *(rubric 3, 4, 5 — 20 điểm)*
@@ -42,14 +38,10 @@ _Answer here._
 
 | Quantization | Size (GB) | Load (ms) | TTFT P50/P95 (ms) | TPOT P50/P95 (ms) | E2E P50/P95/P99 (ms) | Decode (tok/s) |
 |---|--:|--:|--:|--:|--:|--:|
-| UD-Q4_K_XL | | | | | | |
-| UD-Q2_K_XL | | | | | | |
+| Q4_K_M | 0.50 | 8629 | 1419 / 1517 | 43.0 / 44.6 | 4105 / 4242 / 4242 | 23.3 |
+| UD-Q2_K_XL | 0.39 | 12244 | 1859 / 1986 | 617.6 / 621.1 | 40807 / 40985 / 40985 | 1.6 |
 
-**Quan sát** (≤ 60 chữ): 2-bit nhanh hơn bao nhiêu, và **có đáng không**? Bạn đã thử
-hỏi cùng một câu trên cả hai (`make serve` vs `.venv/bin/python labs/02-serve/serve.py --compare`)
-chưa? Chất lượng khác nhau thế nào?
-
-_Answer here._
+**Quan sát** (≤ 60 chữ): Bản 2-bit chậm hơn 14.56 lần so với 4-bit do dequantization overhead trên iGPU rất lớn. Hoàn toàn không đáng để đánh đổi vì tiết kiệm RAM rất ít (0.11 GB) nhưng hiệu năng giảm sâu không thể dùng được.
 
 ---
 
@@ -59,22 +51,16 @@ _Answer here._
 
 | Users | RPS | P50 (ms) | P95 (ms) | P99 (ms) | Eff. concurrency | Failures |
 |--:|--:|--:|--:|--:|--:|--:|
-| 10 | | | | | | |
-| 50 | | | | | | |
+| 10 | 0.13 | 44000 | 45000 | 45000 | 4.5 | 0.0% |
+| 50 | 0.15 | 44000 | 46000 | 46000 | 5.4 | 0.0% |
 
-- **Offered load tăng 5×, throughput thực tăng:** _<X.XX>×_
-- **P95 tăng:** _<X.XX>×_
-- **Effective concurrency ở 50 users:** _<số>_ so với `--parallel` = _<số>_ slots
+- **Offered load tăng 5×, throughput thực tăng:** 1.15×
+- **P95 tăng:** 1.02×
+- **Effective concurrency ở 50 users:** 5.4 so với `--parallel` = 4 slots
 
-**Peak `llamacpp:n_busy_slots_per_decode`** (từ `make metrics` khi `make load-50` đang
-chạy): _<số>_ / _<slots>_ slots
+**Peak `llamacpp:n_busy_slots_per_decode`** (từ `make metrics` khi `make load-50` đang chạy): 2.33 / 4 slots
 
-**Saturation reading** (≤ 80 chữ): server của bạn bão hoà ở đâu, và **bằng chứng nào**
-thuyết phục bạn? Nếu P95 tăng nhanh hơn RPS thì phần latency thêm đó là queue time hay
-compute time — bạn biết bằng cách nào? Nếu bạn phải nâng goodput@SLO, bạn sẽ đổi knob
-nào **trước**, và vì sao knob đó?
-
-_Answer here._
+**Saturation reading** (≤ 80 chữ): Server bão hòa dưới 50 users khi throughput chỉ tăng 1.15x khi load tăng 5x, và effective concurrency (5.4) vượt quá 4 slots gây nghẽn hàng đợi (deferred=46). Tôi sẽ tăng --parallel lên 8 để tận dụng xử lý song song của continuous batching.
 
 ---
 
@@ -84,23 +70,20 @@ _Answer here._
 
 | Day | Piece | Real hay stub? |
 |---|---|---|
-| N16 Cloud/IaC | | |
-| N17 Data pipeline | | |
-| N18 Lakehouse | | |
-| N19 Vector + features | | |
+| N16 Cloud/IaC | GCP Project | stub |
+| N17 Data pipeline | Airflow DAG | stub |
+| N18 Lakehouse | BigQuery | stub |
+| N19 Vector + features | Vector search | stub |
 | N20 Serving | `llama-server` | real |
 
 **Latency split** (mean của 3 query, từ output của `pipeline.py`):
 
-- embed: _<ms>_
-- retrieve: _<ms>_
-- llm: _<ms>_
-- **stage chiếm nhiều nhất:** _<stage>_ (_<%>_ của total)
+- embed: 0.0 ms
+- retrieve: 0.1 ms
+- llm: 7621.6 ms
+- **stage chiếm nhiều nhất:** llm (100% của total)
 
-**Reflection** (≤ 60 chữ): bottleneck ở đâu? Có khớp với kỳ vọng của bạn không? Nếu
-phải giảm latency của pipeline này 2×, bạn sẽ tấn công vào đâu?
-
-_Answer here._
+**Reflection** (≤ 60 chữ): Bottleneck ở LLM (100% latency), đúng kỳ vọng vì truy vấn từ khóa rất nhanh còn LLM sinh text cực kỳ tốn tính toán. Để giảm latency 2x, tôi sẽ giảm số thread CPU về 1 hoặc dùng speculative decoding.
 
 ---
 
@@ -110,12 +93,12 @@ _Answer here._
 > một before/after thật (`benchmarks/01-tuning-tg128.md`). Đổi quantization,
 > `LAB_N_CTX`, hay `--parallel` rồi đo lại cũng được.
 
-**Change:** _<vd: hạ -t từ 16 xuống 8; vd: đổi sang UD-Q2_K_XL; vd: --parallel 4 → 8>_
+**Change:** Hạ số thread (-t) từ 4 xuống 1 khi chạy mô hình hoàn toàn trên GPU (ngl=99)
 
 ```
-before:  <số + đơn vị>
-after:   <số + đơn vị>
-speedup: <X.Y>×
+before:  27.6 tok/s (t=4)
+after:   29.2 tok/s (t=1)
+speedup: 1.06x
 ```
 
 **Tại sao nó work** (1–2 đoạn — đây là phần grader đọc kỹ nhất):
@@ -125,7 +108,9 @@ memory bandwidth? vector width? cache residency? scheduling? queueing? Nếu k�
 **khác** với kỳ vọng từ deck — nói rõ, và giải thích vì sao. Grader thưởng điểm cho
 lập luận đúng về một kết quả bất ngờ, hơn là một con số đẹp không được giải thích._
 
-_Answer here._
+Khi chạy Qwen3.5 0.8B hoàn toàn trên iGPU (ngl=99), toàn bộ tính toán tensor đều do iGPU Intel Iris Xe xử lý. CPU chỉ đóng vai trò điều phối luồng và gọi (launch) các Vulkan GPU kernel.
+
+Việc cấu hình nhiều thread CPU (-t 4 hoặc nhiều hơn) không tăng tốc độ tính toán (do GPU xử lý) mà ngược lại gây ra overhead đồng bộ hóa luồng giữa các nhân CPU và tranh chấp tài nguyên lập lịch gọi kernel. Do đó, giảm số thread CPU về tối thiểu (-t 1) là tối ưu nhất vì nó giảm tải CPU và tăng tốc độ kích hoạt kernel lên GPU.
 
 ---
 
@@ -152,9 +137,7 @@ _(để trống nếu bạn không làm phần này)_
 
 ## 7. Điều làm bạn ngạc nhiên nhất  *(optional)*
 
-_(1–2 câu. Không bắt buộc, nhưng grader đọc hết.)_
-
-_(để trống nếu bạn không làm phần này)_
+Điều ngạc nhiên nhất là việc tăng số thread CPU khi chạy ngl=99 trên GPU lại làm giảm hiệu năng sinh token (TPOT) thay vì tăng lên, do phát sinh overhead đồng bộ hóa giữa các luồng CPU.
 
 ---
 

@@ -1,0 +1,34 @@
+{
+  "primary": {
+    "label": "primary",
+    "quant": "Q4_K_M",
+    "model_file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+    "n_requests": 10,
+    "load_ms": 8628.8,
+    "ttft_p50": 1419.2,
+    "ttft_p95": 1516.6,
+    "tpot_p50": 42.97,
+    "tpot_p95": 44.6,
+    "e2e_p50": 4104.8,
+    "e2e_p95": 4242.2,
+    "e2e_p99": 4242.2,
+    "decode_tok_s": 23.3,
+    "size_gb": 0.5
+  },
+  "compare": {
+    "label": "compare",
+    "quant": "UD-Q2_K_XL",
+    "model_file": "Qwen3.5-0.8B-UD-Q2_K_XL.gguf",
+    "n_requests": 10,
+    "load_ms": 12244.3,
+    "ttft_p50": 1858.8,
+    "ttft_p95": 1985.6,
+    "tpot_p50": 617.61,
+    "tpot_p95": 621.06,
+    "e2e_p50": 40806.7,
+    "e2e_p95": 40984.9,
+    "e2e_p99": 40984.9,
+    "decode_tok_s": 1.6,
+    "size_gb": 0.39
+  }
+}
