@@ -119,7 +119,7 @@ Việc cấu hình nhiều thread CPU (-t 4 hoặc nhiều hơn) không tăng t�
 > Bỏ trống nếu không làm. Xem `bonus/README.md`. Đừng làm hết — **một** finding sâu
 > ăn điểm hơn năm bảng nông.
 
-**Đã làm:** B2 (sweep-batch), B4 (C2 kv-cache) & B5 (semantic-cache-offline)
+**Đã làm:** B2 (sweep-batch), B3 (speedup), B4 (C2 kv-cache) & B5 (semantic-cache-offline)
 
 **Numbers:**
 
