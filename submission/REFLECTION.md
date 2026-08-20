@@ -119,19 +119,27 @@ Việc cấu hình nhiều thread CPU (-t 4 hoặc nhiều hơn) không tăng t�
 > Bỏ trống nếu không làm. Xem `bonus/README.md`. Đừng làm hết — **một** finding sâu
 > ăn điểm hơn năm bảng nông.
 
-**Đã làm:** B2 (sweep-batch)
+**Đã làm:** B2 (sweep-batch) & B5 (semantic-cache-offline)
 
 **Numbers:**
 
 ```
+[B2: Prefill Batch Sweep]
 before:  150.2 tok/s (-b 512 -ub 512)
 after:   214.5 tok/s (-b 2048 -ub 512)
 speedup: 1.43x
+
+[B5: Semantic Cache (Offline)]
+before:  8 LLM calls (no semantic cache, 0% hit rate)
+after:   5 LLM calls (3 HITs saved, 38% hit rate)
+speedup: Inf on hits (0ms vs ~7.5s total time skipped per hit)
 ```
 
 **Điều này nói lên gì mà deck chưa nói:**
 
-Thí nghiệm sweep batch size chỉ ra rằng việc tăng kích thước logical batch (-b 2048) và micro-batch (-ub 512) giúp tăng tốc độ xử lý prefill lên 1.43x. Tuy nhiên, trong thực tế sản xuất, một micro-batch lớn sẽ giữ khóa tính toán GPU lâu hơn cho mỗi bước xử lý, khiến các request gửi đến sau phải chờ lâu hơn trong hàng đợi (tăng TTFT). Do đó, việc đo lường P95 TTFT dưới tải cao là bắt buộc để đảm bảo sự cân bằng giữ thông lượng và độ trễ.
+1. **Prefill Batch Size (B2):** Thí nghiệm chỉ ra rằng việc tăng kích thước logical batch (-b 2048) và micro-batch (-ub 512) giúp tăng tốc độ xử lý prefill lên 1.43x. Tuy nhiên, một micro-batch lớn sẽ giữ khóa tính toán GPU lâu hơn cho mỗi bước xử lý, khiến các request gửi đến sau phải chờ lâu hơn trong hàng đợi (tăng TTFT). Do đó, việc đo lường P95 TTFT dưới tải cao là bắt buộc để đảm bảo sự cân bằng giữ thông lượng và độ trễ.
+
+2. **Semantic Cache (B5):** Việc sử dụng cache ngữ nghĩa (offline) giúp bắt được 38% số câu hỏi trùng lặp về ngữ nghĩa nhưng khác từ vựng (vd: "What is goodput at SLO?" và "Can you define goodput@SLO?"). Mỗi lần HIT tiết kiệm 100% chi phí tính toán (không prefill, không decode). Tuy nhiên, nếu threshold quá thấp sẽ dễ trả về câu trả lời sai ngữ cảnh, cần sử dụng các mô hình embedding chuyên dụng và kỹ thuật salting để bảo mật cache.
 
 ---
 
