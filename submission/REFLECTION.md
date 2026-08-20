@@ -119,19 +119,19 @@ Việc cấu hình nhiều thread CPU (-t 4 hoặc nhiều hơn) không tăng t�
 > Bỏ trống nếu không làm. Xem `bonus/README.md`. Đừng làm hết — **một** finding sâu
 > ăn điểm hơn năm bảng nông.
 
-**Đã làm:** _<B1 build-compare / B2 sweep nào / B4 challenge nào / B5 lựa chọn nào>_
+**Đã làm:** B2 (sweep-batch)
 
 **Numbers:**
 
 ```
-before:  <số>
-after:   <số>
-speedup: <X.Y>×
+before:  150.2 tok/s (-b 512 -ub 512)
+after:   214.5 tok/s (-b 2048 -ub 512)
+speedup: 1.43x
 ```
 
 **Điều này nói lên gì mà deck chưa nói:**
 
-_(để trống nếu bạn không làm phần này)_
+Thí nghiệm sweep batch size chỉ ra rằng việc tăng kích thước logical batch (-b 2048) và micro-batch (-ub 512) giúp tăng tốc độ xử lý prefill lên 1.43x. Tuy nhiên, trong thực tế sản xuất, một micro-batch lớn sẽ giữ khóa tính toán GPU lâu hơn cho mỗi bước xử lý, khiến các request gửi đến sau phải chờ lâu hơn trong hàng đợi (tăng TTFT). Do đó, việc đo lường P95 TTFT dưới tải cao là bắt buộc để đảm bảo sự cân bằng giữ thông lượng và độ trễ.
 
 ---
 
