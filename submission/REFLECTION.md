@@ -119,7 +119,7 @@ Việc cấu hình nhiều thread CPU (-t 4 hoặc nhiều hơn) không tăng t�
 > Bỏ trống nếu không làm. Xem `bonus/README.md`. Đừng làm hết — **một** finding sâu
 > ăn điểm hơn năm bảng nông.
 
-**Đã làm:** B2 (sweep-batch) & B5 (semantic-cache-offline)
+**Đã làm:** B2 (sweep-batch), B4 (C2 kv-cache) & B5 (semantic-cache-offline)
 
 **Numbers:**
 
@@ -129,6 +129,11 @@ before:  150.2 tok/s (-b 512 -ub 512)
 after:   214.5 tok/s (-b 2048 -ub 512)
 speedup: 1.43x
 
+[B4: KV Cache Quantization (C2)]
+before:  170.1 tok/s prefill, 23.9 tok/s decode (f16 KV Cache)
+after:   199.1 tok/s prefill, 24.5 tok/s decode (q8_0 KV Cache)
+speedup: 1.17x prefill, 1.03x decode, and 50% memory savings
+
 [B5: Semantic Cache (Offline)]
 before:  8 LLM calls (no semantic cache, 0% hit rate)
 after:   5 LLM calls (3 HITs saved, 38% hit rate)
@@ -137,9 +142,11 @@ speedup: Inf on hits (0ms vs ~7.5s total time skipped per hit)
 
 **Điều này nói lên gì mà deck chưa nói:**
 
-1. **Prefill Batch Size (B2):** Thí nghiệm chỉ ra rằng việc tăng kích thước logical batch (-b 2048) và micro-batch (-ub 512) giúp tăng tốc độ xử lý prefill lên 1.43x. Tuy nhiên, một micro-batch lớn sẽ giữ khóa tính toán GPU lâu hơn cho mỗi bước xử lý, khiến các request gửi đến sau phải chờ lâu hơn trong hàng đợi (tăng TTFT). Do đó, việc đo lường P95 TTFT dưới tải cao là bắt buộc để đảm bảo sự cân bằng giữ thông lượng và độ trễ.
+1. **Prefill Batch Size (B2):** Thí nghiệm chỉ ra rằng việc tăng kích thước logical batch (-b 2048) và micro-batch (-ub 512) giúp tăng tốc độ xử lý prefill lên 1.43x. Tuy nhiên, một micro-batch lớn sẽ giữ khóa tính toán GPU lâu hơn cho mỗi bước xử lý, khiến các request gửi đến sau phải chờ lâu hơn trong hàng đợi (tăng TTFT).
 
-2. **Semantic Cache (B5):** Việc sử dụng cache ngữ nghĩa (offline) giúp bắt được 38% số câu hỏi trùng lặp về ngữ nghĩa nhưng khác từ vựng (vd: "What is goodput at SLO?" và "Can you define goodput@SLO?"). Mỗi lần HIT tiết kiệm 100% chi phí tính toán (không prefill, không decode). Tuy nhiên, nếu threshold quá thấp sẽ dễ trả về câu trả lời sai ngữ cảnh, cần sử dụng các mô hình embedding chuyên dụng và kỹ thuật salting để bảo mật cache.
+2. **KV Cache Quantization (B4 - C2):** Trên GPU tích hợp (UMA), băng thông bộ nhớ chia sẽ với RAM hệ thống là nghẽn cổ chai chính. Việc nén KV cache về q8_0 giúp giảm 50% lượng dữ liệu truy xuất, giúp tăng tốc prefill lên 1.17x và decode lên 1.03x mặc dù GPU tốn thêm chu kỳ tính toán để giải nén (dequantize). Q8_0 là lựa chọn tối ưu vì nó không gây suy giảm đáng kể chất lượng đầu ra.
+
+3. **Semantic Cache (B5):** Việc sử dụng cache ngữ nghĩa giúp bắt được 38% câu hỏi trùng lặp về ngữ nghĩa nhưng khác từ vựng (vd: "What is goodput at SLO?" và "Can you define goodput@SLO?"). Mỗi lần HIT tiết kiệm 100% chi phí tính toán.
 
 ---
 
